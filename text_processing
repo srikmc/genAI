@@ -1,0 +1,235 @@
+import csv
+import os
+import re
+from pathlib import Path
+import shutil
+import string
+import nltk
+import emoji
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+from nltk.stem import WordNetLemmatizer
+from nltk.stem import PorterStemmer
+
+
+
+chat_words={
+"AFAIK":"As Far As I Know",
+"AFK":"Away From Keyboard",
+"ASAP":"As Soon As Possible",
+"ATK":"At The Keyboard",
+"ATM":"At The Moment",
+"A3":"Anytime, Anywhere, Anyplace",
+"BAK":"Back At Keyboard",
+"BBL":"Be Back Later",
+"BBS":"Be Back Soon",
+"BFN":"Bye For Now",
+"B4N":"Bye For Now",
+"BRB":"Be Right Back",
+"BRT":"Be Right There",
+"BTW":"By The Way",
+"B4":"Before",
+"B4N":"Bye For Now",
+"CU":"See You",
+"CUL8R":"See You Later",
+"CYA":"See You",
+"FAQ":"Frequently Asked Questions",
+"FC":"Fingers Crossed",
+"FWIW":"For What It's Worth",
+"FYI":"For Your Information",
+"GAL":"Get A Life",
+"GG":"Good Game",
+"GN":"Good Night",
+"GMTA":"Great Minds Think Alike",
+"GR8":"Great!",
+"G9":"Genius",
+"IC":"I See",
+"ICQ":"I Seek you",
+"ILU":"I Love You",
+"IMHO":"In My Honest/Humble Opinion",
+"IMO":"In My Opinion",
+"IOW":"In Other Words",
+"IRL":"In Real Life",
+"KISS":"Keep It Simple, Stupid",
+"LDR":"Long Distance Relationship",
+"LMAO":"Laugh My A.. Off",
+"LOL":"Laughing Out Loud",
+"LTNS":"Long Time No See",
+"L8R":"Later",
+"MTE":"My Thoughts Exactly",
+"M8":"Mate",
+"NRN":"No Reply Necessary",
+"OIC":"Oh I See",
+"PITA":"Pain In The A..",
+"PRT":"Party",
+"PRW":"Parents Are Watching",
+"QPSA":"Que Pasa",
+"ROFL":"Rolling On The Floor Laughing",
+"ROFLOL":"Rolling On The Floor Laughing Out Loud",
+"ROTFLMAO":"Rolling On The Floor Laughing My A.. Off",
+"SK8":"Skate",
+"STATS":"Your sex and age",
+"ASL":"Age, Sex, Location",
+"THX":"Thank You",
+"TTFN":"Ta-Ta For Now!",
+"TTYL":"Talk To You Later",
+"U":"You",
+"U2":"You Too",
+"U4E":"Yours For Ever",
+"WB":"Welcome Back",
+"WTF":"What The F...",
+"WTG":"Way To Go!",
+"WUF":"Where Are You From?",
+"W8":"Wait...",
+"7K":"Sick:-D Laugher",
+"TFW":"That feeling when",
+"MFW":"My face when",
+"MRW":"My reaction when",
+"IFYP":"I feel your pain",
+"LOL":"Laughing out loud",
+"TNTL":"Trying not to laugh",
+"JK":"Just kidding",
+"IDC":"I don’t care",
+"ILY":"I love you",
+"IMU":"I miss you",
+"ADIH":"Another day in hell",
+"IDC":"I don’t care",
+"ZZZ":"Sleeping, bored, tired",
+"WYWH":"Wish you were here",
+"TIME":"Tears in my eyes",
+"BAE":"Before anyone else",
+"FIMH":"Forever in my heart",
+"BSAAW":"Big smile and a wink",
+"BWL":"Bursting with laughter",
+"LMAO":"Laughing my a** off",
+"BFF":"Best friends forever",
+"CSL":"Can’t stop laughing",
+}
+
+
+def file_extract(file_name="twcs.csv",row_name="text"):
+    
+    pattern = Path(file_name).suffix
+    print(pattern)
+    s = re.split(pattern,file_name)[-2]
+    new_file_name = s+"_updated"+pattern
+    shutil.copy(file_name,new_file_name)
+    file = open(new_file_name,'r+') 
+    cvsreader = csv.DictReader(file)
+    readData = [row for row in csv.DictReader(file)]
+    readHeader = readData[1].keys()
+    return new_file_name,row_name, readData
+
+def remove_emojis(text):
+    emoji_pattern = re.compile("["
+                               u"\U0001F600-\U0001F64F"  # emoticons
+                               u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                               u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                               u"\U0001F700-\U0001F77F"  # alchemical symbols
+                               u"\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+                               u"\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+                               u"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+                               u"\U0001FA00-\U0001FA6F"  # Chess Symbols
+                               u"\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+                               u"\U00002702-\U000027B0"  # Dingbats
+                               u"\U000024C2-\U0001F251"
+                               "]+", flags=re.UNICODE)
+    clean_text = emoji_pattern.sub(r'', text)
+    return clean_text
+
+def chat_conversion(text):
+    new_text=[]
+    for w in text.split():
+        if w.upper() in chat_words:
+            new_text.append(chat_words[w.upper()])
+        else:
+            new_text.append(w)
+    return " ".join(new_text)
+
+def writer(header, data, filename, option):
+        with open (filename, "w", newline = "") as csvfile:
+            if option == "write":
+
+                movies = csv.writer(csvfile)
+                movies.writerow(header)
+                for x in data:
+                    movies.writerow(x)
+            elif option == "update":
+                writer = csv.DictWriter(csvfile, fieldnames = header)
+                writer.writeheader()
+                writer.writerows(data)
+            else:
+                print("Option is not known")
+
+
+def convert_lowercase(text):
+    return text.lower()
+
+
+def remove_unicode(text):
+    return re.sub(r"(@\[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)|^rt|http.+?", "", text)
+
+def remove_stopwords(text):
+    new_text=[]
+    for word in text.split():
+        if word in stopwords.words("english"):
+            new_text.append("")
+        else:
+            print(word.strip())
+            new_text.append(word.strip())
+    return " ".join(new_text).replace("   ","")
+
+
+def remove_emoji(text):
+    text=emoji.demojize(text)
+    return text
+
+
+def remove_punc(text):
+    exclude = string.punctuation 
+    for char in exclude:
+        text=text.replace(char,"")
+    return text
+
+def lammatization(text):
+    words=text.split()
+    lemmetizer=WordNetLemmatizer()
+    lemetized_word=[lemmetizer.lemmatize(word) for word in words]
+    return ''.join(lemetized_word)
+
+
+def stemmer(text):
+  ps =PorterStemmer()
+  new_text = []
+  words=text.split()
+  print(words)
+  for word in words:
+    rootWord=ps.stem(word)
+    #print(word)
+    print(rootWord)
+    new_text.append(rootWord)
+  return " ".join(new_text)
+
+def preprocess_input_text(text="sample"):
+    
+   
+    new_file_name, index, text = file_extract()
+    k = 0
+    for i in text:
+
+        text[k][index] = chat_conversion(text[k][index])
+        text[k][index] = convert_lowercase(text[k][index])
+        text[k][index] = remove_punc(text[k][index])
+        text[k][index] = remove_emojis(text[k][index])
+        text[k][index] = remove_unicode(text[k][index])
+        text[k][index] = remove_stopwords(text[k][index])
+        text[k][index] = lammatization(text[k][index])
+        text[k][index] = stemmer(text[k][index])
+        k+=1
+    
+    print(k)
+    readHeader = text[1].keys()
+    writer(readHeader, text, new_file_name, "update")
+
+preprocess_input_text()
